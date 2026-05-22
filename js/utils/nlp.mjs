@@ -1,0 +1,583 @@
+export function longestCommonSubstringWeightedLength(
+	userInput,
+	keyword,
+	wordLengthFactor = 0.1,
+) {
+	let longestCommonSubstring = "";
+	let longestCommonSubstringWeightedLength = 0;
+	const positionDecayFactor = 10; // Coefficient d'importance pour la position
+
+	for (let i = 0; i < userInput.length; i++) {
+		for (let j = 0; j < keyword.length; j++) {
+			let substringWeightedLength = 0;
+			let substring = "";
+			let substringLength = 0;
+			let x = i;
+			let y = j;
+			while (
+				x < userInput.length &&
+				y < keyword.length &&
+				userInput[x] === keyword[y]
+			) {
+				substring += userInput[x];
+				x++;
+				y++;
+
+				// On calcule un poids en fonction de deux paramètres :
+				// 1) Prise en compte de la position de la substring dans le keyword : plus la substring est au début du keyword, plus le poids est important
+				// Idée = début d'un mot souvent plus important pour la signification que la fin
+				const positionDecay = j / keyword.length;
+				substringLength = substring.length;
+				const positionFactor = 1 / (1 + positionDecay * positionDecayFactor);
+				// 2) Prise en compte de la longueur de la substring : plus la substring est longue par rapport à la longueur initial du keyword, plus le poids est important
+				const lengthFactor = 1 / (1 + 1 * (keyword.length - substringLength));
+				// Calcul du poids final
+				const positionWeight = positionFactor * lengthFactor;
+
+				// Prise en compte d'une constante qui donne plus ou moins de poids à la longueur des keywords
+				substringWeightedLength =
+					(substringLength + substringLength * wordLengthFactor) *
+					positionWeight;
+			}
+
+			if (
+				substringLength > 4 &&
+				substringLength > longestCommonSubstring.length
+			) {
+				longestCommonSubstring = substring;
+				longestCommonSubstringWeightedLength = substringWeightedLength;
+			}
+		}
+	}
+	return longestCommonSubstringWeightedLength;
+}
+
+export function levenshteinDistance(a, b) {
+	/* Fonction pour calculer une similarité plutôt que d'en rester à une identité stricte */
+	const aLength = a.length;
+	const bLength = b.length;
+	if (aLength === 0) return bLength;
+	if (bLength === 0) return aLength;
+
+	const matrix = [];
+	for (let i = 0; i <= bLength; i++) {
+		matrix[i] = [i];
+	}
+
+	for (let j = 0; j <= aLength; j++) {
+		matrix[0][j] = j;
+	}
+
+	for (let i = 1; i <= bLength; i++) {
+		for (let j = 1; j <= aLength; j++) {
+			const cost = a[j - 1] === b[i - 1] ? 0 : 1;
+			matrix[i][j] = Math.min(
+				matrix[i - 1][j] + 1,
+				matrix[i][j - 1] + 1,
+				matrix[i - 1][j - 1] + cost,
+			);
+		}
+	}
+
+	return matrix[bLength][aLength];
+}
+
+export function hasLevenshteinDistanceLessThan(
+	string,
+	keyWord,
+	distance = 2,
+	wordLengthFactor = 0.1,
+	ngramLengthBoostCoefficient = 3,
+) {
+	let similarity = 0;
+	// Divise keyWord en mots pour déterminer la longueur des n-grammes
+	const keyWordWords = keyWord.split(" ");
+	const n = keyWordWords.length;
+	// Divise la chaîne en un tableau de mots
+	const words = string.split(" ");
+
+	// Parcours les n-grammes de taille n dans la chaîne
+	for (let i = 0; i <= words.length - n; i++) {
+		// Crée un n-gramme à partir de la sous-séquence des mots
+		const nGram = words.slice(i, i + n).join(" ");
+		// Calcule la distance de Levenshtein entre le n-gramme et keyWord
+		const distanceLevenshtein = levenshteinDistance(nGram, keyWord);
+
+		// Si la distance est inférieure à la distance donnée, on augmente le score de similarité en fonction de la taille du n-gramme
+		if (distanceLevenshtein < distance) {
+			similarity =
+				similarity +
+				nGram.length * wordLengthFactor * ngramLengthBoostCoefficient;
+		}
+	}
+	return similarity;
+}
+
+export function removeAccents(str) {
+	// prettier-ignore
+	const accentMap = {
+		"à": "a",
+		"â": "a",
+		"é": "e",
+		"è": "e",
+		"ê": "e",
+		"ë": "e",
+		"î": "i",
+		"ï": "i",
+		"ô": "o",
+		"ö": "o",
+		"û": "u",
+		"ù": "u",
+		"ü": "u",
+		"ÿ": "y",
+		"ç": "c",
+		"À": "A",
+		"Â": "A",
+		"É": "E",
+		"È": "E",
+		"Ê": "E",
+		"Ë": "E",
+		"Î": "I",
+		"Ï": "I",
+		"Ô": "O",
+		"Ö": "O",
+		"Û": "U",
+		"Ù": "U",
+		"Ü": "U",
+		"Ÿ": "Y",
+		"Ç": "C",
+	};
+
+	return str.replace(
+		/[àâéèêëîïôöûùüÿçÀÂÉÈÊËÎÏÔÖÛÙÜŸÇ]/g,
+		(match) => accentMap[match] || match,
+	);
+}
+
+export function normalizeText(str, options) {
+	// Fonction pour normaliser une chaîne de caractères : tout en minuscules, sans accents, sans ponctuation
+	const keepCase = options && options.keepCase;
+	let normalized = keepCase ? str.trim() : str.toLowerCase().trim();
+	normalized = removeAccents(normalized);
+	return normalized;
+}
+
+// Calcule le produit scalaire de deux vecteurs
+export function dotProduct(vec1, vec2) {
+	const commonWords = new Set([...Object.keys(vec1), ...Object.keys(vec2)]);
+	let dot = 0;
+	for (const word of commonWords) {
+		dot += (vec1[word] || 0) * (vec2[word] || 0);
+	}
+	return dot;
+}
+
+// Calcule la magnitude d'un vecteur
+export function magnitude(vec) {
+	let sum = 0;
+	for (const word in vec) {
+		sum += vec[word] ** 2;
+	}
+	return Math.sqrt(sum);
+}
+// Constantes pour exclure certains tokens non significatifs (terminaisons courantes par exemple)
+const nonSignificantFiveLettersToken = [
+	"ation",
+	"etion",
+	"ition",
+	"otion",
+	"ution",
+	"ement",
+	"mment",
+	"ssant",
+	"sante",
+	"ments",
+	"antes",
+	"ourir",
+	"endre",
+	"isser",
+	"ction",
+	"tions",
+	"aient",
+	"erent",
+	"irent",
+	"euses",
+	"elles",
+	"iques",
+	"ables",
+	"pable",
+	"ibles",
+	"asses",
+	"esses",
+	"isses",
+	"osses",
+	"usses",
+	"oires",
+	"aires",
+	"euses",
+	"antes",
+	"entes",
+	"anger",
+	"endre",
+	"teurs",
+	"trice",
+];
+
+const nonSignificantSixLettersToken = [
+	"ations",
+	"etions",
+	"itions",
+	"otions",
+	"utions",
+	"ements",
+	"mments",
+	"ssants",
+	"santes",
+	"rement",
+	"amment",
+	"emment",
+	"iquent",
+	"issent",
+	"assent",
+	"ussent",
+	"escent",
+	"erions",
+	"irions",
+	"ueuses",
+	"eusent",
+	"ateurs",
+	"atrice",
+	"trices",
+	"ctions",
+	"ssions",
+	"eraient",
+	"iraient",
+	"uerait",
+];
+
+// Fonction pour diviser une chaîne de caractères en tokens, éventuellement en prenant en compte l'index de la réponse du Chatbot (pour prendre en compte différement les tokens présents dans le titre de la réponse)
+export function tokenize(text, options) {
+	const prioritizeTokensInTitle = options && options.prioritizeTokensInTitle;
+	// On garde d'abord seulement les mots d'au moins 5 caractères et on remplace les lettres accentuées par l'équivalent sans accent
+	let words = text ? text.toLowerCase() : "";
+	words = words.replace(/,|\.|:|\?|!|\(|\)|\[|\||\/\]/g, "");
+	words = words.replaceAll("/", " ");
+	words = removeAccents(words);
+	words =
+		words
+			.split(/\s|'/)
+			.map((word) => word.trim())
+			.filter((word) => word.length >= 5) || [];
+	const tokens = [];
+
+	// On va créer des tokens avec à chaque fois un poids associé
+	// Plus le token est long, plus le poids du token est important
+	const weights = [0, 0, 0, 0, 0.4, 0.6, 0.8];
+	// Si le token correspond au début du mot, le poids est plus important
+	const bonusStart = 0.2;
+	// Si le token est présent dans le titre, le poids est très important, et encore plus si on a choisi l'option pour booster le poids dans le titre
+	const bonusInTitle = options && options.boostIfKeywordsInTitle ? 100 : 10;
+	// Si le nombre de caractères du token est proche du nombre de caractères du mot de base, alors le poids est plus important
+	const bonusLengthSimilarity = 5;
+
+	function weightedToken(index, tokenLength, word) {
+		let weight = tokenLength > weights.length ? 1 : weights[tokenLength - 1]; // Poids en fonction de la taille du token
+		weight = index === 0 ? weight + bonusStart : weight; // Bonus si le token est en début du mot
+		// Bonus si le token est proche en nombre de mots, du mot de base
+		const lengthDifference = word.length - tokenLength;
+		weight =
+			lengthDifference > 0
+				? weight + bonusLengthSimilarity / lengthDifference
+				: weight;
+		let token;
+		if (lengthDifference == 0) {
+			weight = weight + bonusLengthSimilarity;
+			token = word;
+		} else {
+			token = word.substring(index, index + tokenLength);
+			// Si le token fait partie des tokens non significatifs, on l'ignore
+			const isNonSignificant =
+				(token.length === 5 &&
+					nonSignificantFiveLettersToken.includes(token)) ||
+				(token.length === 6 && nonSignificantSixLettersToken.includes(token));
+			if (isNonSignificant) {
+				return undefined;
+			}
+		}
+		if (prioritizeTokensInTitle) {
+			const titleResponse =
+				options && options.titleResponse
+					? options.titleResponse.toLowerCase()
+					: "";
+			// Bonus si le token est dans le titre
+			if (titleResponse.includes(token)) {
+				weight = weight + bonusInTitle;
+			}
+		}
+		return { token, weight: weight };
+	}
+
+	const wordsLength = words.length;
+	for (let wordIndex = 0; wordIndex < wordsLength; wordIndex++) {
+		const word = words[wordIndex];
+		// Premier type de token : le mot en entier ; poids le plus important
+		const weightFullWord =
+			Math.max(5, weightedToken(0, word.length, word).weight) || 5;
+		tokens.push({
+			token: word,
+			weight: weightFullWord,
+		});
+		// Ensuite on intègre des tokens de 5, 6 et 7 caractères consécutifs pour détecter des racines communes (sauf si le token fait partie des tokens non significatifs)
+
+		const wordLength = word.length;
+		if (wordLength >= 5) {
+			for (let i = 0; i <= wordLength - 5; i++) {
+				if (!weightedToken(i, 5, word)) continue;
+				tokens.push(weightedToken(i, 5, word));
+			}
+		}
+		if (wordLength >= 6) {
+			for (let i = 0; i <= wordLength - 6; i++) {
+				if (!weightedToken(i, 6, word)) continue;
+				tokens.push(weightedToken(i, 6, word));
+			}
+		}
+		if (wordLength >= 7) {
+			for (let i = 0; i <= wordLength - 7; i++) {
+				if (!weightedToken(i, 7, word)) continue;
+				tokens.push(weightedToken(i, 7, word));
+			}
+		}
+	}
+	return tokens;
+}
+
+export function createVector(text, options) {
+	// Fonction pour créer un vecteur pour chaque texte en prenant en compte le poids de chaque token et éventuellement l'index de la réponse du chatbot
+	const tokens = tokenize(text, options);
+	const vec = {};
+	for (const { token, weight } of tokens) {
+		if (token) {
+			vec[token] = (vec[token] || 0) + weight;
+		}
+	}
+	return vec;
+}
+
+function cosineSimilarity(vectorA, vectorB) {
+	// Calcule la similarité cosinus entre deux vecteurs
+	const dot = dotProduct(vectorA, vectorB);
+	const mag1 = magnitude(vectorA);
+	const mag2 = magnitude(vectorB);
+
+	if (mag1 === 0 || mag2 === 0) {
+		return 0; // Évite la division par zéro
+	} else {
+		return dot / (mag1 * mag2);
+	}
+}
+
+export function cosineSimilarityTextVector(str, vector, options) {
+	// Calcul de similarité entre une chaîne de caractère (ce sera le message de l'utilisateur) et une autre chaîne de caractère déjà transformée en vecteur (c'est le vecteur de la réponse du chatbot)
+
+	// Crée les vecteurs pour la chaîne de caractère (qui correspondra au message de l'utilisateur)
+	const vectorString = createVector(str, options);
+
+	// Calcule la similarité cosinus entre les deux vecteurs
+	return cosineSimilarity(vectorString, vector);
+}
+
+const stopWords = new Set([
+	"le",
+	"la",
+	"les",
+	"l",
+	"un",
+	"une",
+	"des",
+	"de",
+	"du",
+	"d",
+	"ce",
+	"cette",
+	"cet",
+	"ces",
+	"c",
+	"je",
+	"j",
+	"il",
+	"et",
+	"à",
+	"au",
+	"aux",
+	"pour",
+	"dans",
+	"en",
+	"pour",
+	"avec",
+	"sur",
+	"sous",
+	"par",
+	"dans",
+	"que",
+	"qui",
+	"quelques",
+	"qu",
+	"est",
+	"suis",
+	"sont",
+	"ne",
+	"n",
+	"pas",
+	"me",
+	"m",
+	"surtout",
+	"principalement",
+	"beaucoup",
+	"bien",
+	"vraiment",
+	"avant",
+	"tout",
+	"plus",
+	"moins",
+	"très",
+	"aussi",
+	"infos",
+	"information",
+	"informations",
+	"thème",
+	"sujet",
+	"thématique",
+	"trouve",
+	"trouver",
+	"donne",
+	"donner",
+	"intéresse",
+	"intéressé",
+	"intéressée",
+	"intéressent",
+	"cherche",
+	"aime",
+	"aimerais",
+	"veux",
+	"voudrais",
+	"besoin",
+	"ai",
+	"souhaite",
+	"souhaiterais",
+	"pourrais",
+	"peux",
+]);
+
+function cosineSimilarityTexts(strA, strB, options = {}) {
+	// Calcul de similarité entre deux chaînes de caractères normalisées
+	const strAnormalized = normalizeText(strA);
+	const strBnormalized = normalizeText(strB);
+
+	// Crée les vecteurs pour les deux chaînes de caractères
+	const vectorA = createVector(strAnormalized, options);
+	const vectorB = createVector(strBnormalized, options);
+
+	let result = cosineSimilarity(vectorA, vectorB);
+
+	const boostWords = options.boostWords ? options.boostWords : [];
+	// On booste le score si des mots spécifiques sont présents dans les deux chaînes de caractères
+	// et on booste encore plus le score si plusieurs mots spécifiques sont présents dans les deux chaînes de caractères
+	let countBoostedWords = 0;
+	for (const word of boostWords) {
+		const wordNormalized = normalizeText(word);
+		if (
+			strAnormalized.includes(wordNormalized) &&
+			strBnormalized.includes(wordNormalized)
+		) {
+			countBoostedWords++;
+			result = result + 1; // On booste de 1 par mot trouvé dans les deux chaînes
+			if (countBoostedWords > 1) {
+				result = result + 1 * (countBoostedWords - 1); // On booste encore plus si plusieurs mots sont trouvés
+			}
+		}
+	}
+
+	// Calcule la similarité cosinus entre les deux vecteurs
+	return result;
+}
+
+function getImportantWords(str) {
+	if (!str || typeof str !== "string") return [];
+	// On supprime les stopwords et les caractères spéciaux
+	const words = str
+		.replace(/[.,!?'’;:]/g, " ")
+		.split(/\s+/)
+		.filter((word) => word && !stopWords.has(word.toLowerCase()));
+	return words;
+}
+
+export function searchScore(baseText, searchText, options = {}) {
+	// Fonction de recherche fondée sur la similarité cosinus et qui prend en compte les mots importants à trouver
+
+	// Récupère les mots importants dans le texte de recherche
+	const importantWords = getImportantWords(searchText);
+	const importantWordCount = importantWords.length;
+	// Ajoute les mots importants à l'option de boostWords pour le calcul de similarité
+	if (!options.boostWords) {
+		options.boostWords = [];
+	}
+	options.boostWords = options.boostWords.concat(importantWords);
+
+	// Calcule la similarité cosinus entre les deux textes
+	let cosineSim = cosineSimilarityTexts(baseText, searchText, options);
+
+	// On réduit le score s'il y avait plusieurs mots spécifiques à trouver et qu'on ne les a pas tous trouvés
+	if (importantWordCount > 1 && options.strictMode) {
+		let foundImportantWordCount = 0;
+		for (const word of importantWords) {
+			const wordNormalized = normalizeText(word);
+			if (normalizeText(baseText).includes(wordNormalized)) {
+				foundImportantWordCount++;
+			}
+		}
+		if (foundImportantWordCount < importantWordCount) {
+			const missingWords = importantWordCount - foundImportantWordCount;
+			const penaltyPerMissingWord = 2.75;
+			const totalPenalty = missingWords * penaltyPerMissingWord;
+			cosineSim = Math.max(0, cosineSim - totalPenalty);
+		}
+	}
+
+	return cosineSim;
+}
+
+export function mainTopic(str, specificExpressionsToRemove = []) {
+	// Extrait le sujet principal d'une chaîne de caractères qui représente une courte phrase
+	if (!str || typeof str !== "string") return "";
+	// On supprime les caractères spéciaux
+	str = str.replace(/[.,!?'’;:]/g, " ");
+	// On supprime les expressions spécifiques
+	const baseExpressionsToRemove = [
+		"-moi",
+		"-tu",
+		"en savoir plus",
+		"à propos de",
+	];
+	specificExpressionsToRemove = specificExpressionsToRemove.concat(
+		baseExpressionsToRemove,
+	);
+	for (const expr of specificExpressionsToRemove) {
+		const regex = new RegExp(`\\b${expr}\\b`, "gi");
+		str = str.replace(regex, " ");
+	}
+	// CAS 1 : s'il y a un seul mot, c'est le sujet principal
+	const words = str.trim().split(/\s+/);
+	if (words.length === 1) {
+		return words[0];
+	}
+	// CAS 2 : s'il y a plusieurs mots, on enlève les stop-words et on retourne le mot le plus long restant
+	const filteredWords = words.filter(
+		(word) => !stopWords.has(word.toLowerCase()),
+	);
+	if (filteredWords.length === 0) {
+		return "";
+	}
+	const mainTopic = filteredWords.join(" ");
+	return mainTopic;
+}
