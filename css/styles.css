@@ -1,0 +1,672 @@
+/* 
+	BASE
+*/
+
+/* VARIABLES CSS */
+
+:root {
+	--font: Inter, Avenir, Helvetica, Arial, sans-serif;
+	--body-bg: #fff;
+	--h1-bg: #fff;
+	--main-bg: linear-gradient(
+		to right,
+		#eff2f7,
+		#e7edf7,
+		#e0e9f7,
+		#d8e4f7,
+		#d0e0f7
+	);
+	--main-border-color: #fff;
+	--main-border-radius: 15px;
+	--controls-bg: #fff;
+	--color-primary: rgb(0, 123, 255);
+	--color-text: black;
+	--color-bg: #fff;
+	--color-light: grey;
+	--color-lighter: rgb(0 0 0 / 20%);
+	--color-ultra-light: rgb(255 255 255 / 25%);
+	--color-link: darkblue;
+	--avatar-size: 40px;
+}
+
+/* DARKMODE */
+
+:root.darkmode {
+	--body-bg: #171919;
+	--h1-bg: #171919;
+	--main-bg: linear-gradient(
+		90deg,
+		#1e2021,
+		#202223,
+		#222425,
+		#242627,
+		#272929
+	);
+	--main-border-color: transparent;
+	--controls-bg: #171919;
+	--color-text: #e0ddd7;
+	--color-bg: #171919;
+	--color-light: #888;
+	--color-lighter: rgb(255 255 255 / 20%);
+	--color-ultra-light: rgb(0 0 0 / 10%);
+	--color-link: #6eb4ff;
+}
+.darkmode .messageOptions a {
+	--color-light: #444 !important;
+}
+.darkmode .admonition {
+	--info-color-title: white !important;
+	--success-color-title: white !important;
+	--warning-color-title: white !important;
+}
+.darkmode input,
+.darkmode button,
+.darkmode select {
+	color: white;
+	border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.darkmode input,
+.darkmode button {
+	background-color: #3b3b3b;
+}
+
+.darkmode select {
+	background-color: rgba(0, 0, 0, 0.1);
+}
+
+.darkmode select:focus-visible {
+	border-color: rgba(47, 50, 51, 0.3);
+}
+
+.darkmode option {
+	background: rgb(23, 25, 25);
+}
+
+/* 
+	LAYOUT
+ */
+
+/* LAYOUT PRICIPAL */
+
+html {
+	overflow-x: hidden;
+}
+
+body {
+	margin: 0;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	font-size: 18px;
+	line-height: 1.25em;
+	background: var(--body-bg);
+	font-family: var(--font);
+	color: var(--color-text);
+}
+
+@media screen and (min-width: 500px) {
+	body {
+		font-size: 16px;
+	}
+}
+
+h1,
+main,
+#controls {
+	width: 100%;
+	max-width: 820px;
+}
+
+/* HEADER */
+
+h1 {
+	margin: 0;
+	padding: 1em 0;
+	text-align: center;
+	font-size: 1.9em;
+	background: var(--h1-bg);
+}
+
+/* CONTENEURS PRINCIPAUX : main et chat */
+
+main {
+	min-height: 80vh;
+	margin: 0 auto;
+	background: var(--main-bg);
+	border: 1px solid var(--main-border-color);
+}
+
+#chat {
+	padding: 1.25em;
+	margin-bottom: 8em;
+	display: flex;
+	flex-direction: column;
+}
+
+@media screen and (min-width: 500px) {
+	main {
+		border-radius: var(--main-border-radius);
+	}
+	#chat {
+		padding: 2em;
+	}
+}
+
+/* ZONE POUR L'INPUT UTILISATEUR */
+
+#controls {
+	position: fixed;
+	height: 90px;
+	bottom: 0px;
+	padding-top: 10px;
+	padding-left: 10px;
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-start;
+	align-items: baseline;
+	gap: 0.5em;
+	background: var(--controls-bg);
+}
+
+#input-container {
+	width: 95%;
+	border: 1px solid var(--color-lighter);
+	background: var(--color-bg);
+	min-height: 2em;
+	max-height: 3em;
+	overflow-y: auto;
+}
+#input-container:focus-within {
+	border-color: var(--color-light);
+}
+
+@media screen and (min-width: 500px) {
+	#controls {
+		flex-direction: row;
+		justify-content: center;
+		gap: 1em;
+		padding-left: 0px;
+		margin-left: -1px;
+		border: 1px solid var(--main-border-color);
+		padding-top: 20px;
+	}
+	#input-container {
+		width: 85%;
+		max-height: 5em;
+	}
+}
+
+#user-input {
+	outline: none;
+	overflow-wrap: break-word;
+	line-break: auto;
+	line-height: 1em;
+	text-align: left;
+	padding: 5px;
+	cursor: text;
+}
+
+[contenteditable="true"]:empty:before {
+	color: var(--color-light);
+	content: attr(placeholder);
+	font-style: italic;
+	font-size: 0.9em;
+}
+@media screen and (max-width: 400px) {
+	[contenteditable="true"]:empty:before {
+		font-size: 0.75em;
+	}
+}
+@media screen and (min-width: 500px) {
+	[contenteditable="true"]:empty:before {
+		font-size: 1em;
+	}
+}
+
+.sr-only {
+	border: 0 !important;
+	clip: rect(1px, 1px, 1px, 1px) !important;
+	-webkit-clip-path: inset(50%) !important;
+	clip-path: inset(50%) !important;
+	height: 1px !important;
+	overflow: hidden !important;
+	padding: 0 !important;
+	position: absolute !important;
+	width: 1px !important;
+	white-space: nowrap !important;
+}
+
+#send-button {
+	height: 2em;
+}
+
+/* FOOTER */
+
+footer {
+	position: fixed;
+	bottom: 15px;
+	font-size: 0.7em;
+}
+
+footer a,
+footer a:visited {
+	color: var(--color-text) !important;
+}
+footer a:hover {
+	border-bottom-color: var(--color-text);
+}
+
+@media screen and (max-width: 500px) {
+	footer {
+		right: 20px;
+		text-align: right;
+		max-width: 265px;
+		line-height: 1.15em;
+	}
+}
+
+@media screen and (min-width: 500px) {
+	footer {
+		font-size: 0.9em;
+		left: 50%;
+		text-align: center;
+		transform: translateX(-50%);
+	}
+}
+
+/* ÉLÉMENTS DE BASE HTML */
+
+a,
+a:visited {
+	word-wrap: break-word;
+	color: var(--color-link);
+	text-decoration: none;
+	border-bottom: 1px solid var(--color-light);
+	padding-bottom: 0.05em;
+}
+
+pre {
+	position: relative;
+	width: fit-content;
+	margin: 2.5em 0;
+	padding: 20px;
+	padding-right: 6em;
+	border-radius: 5px;
+	background: var(--color-bg);
+	box-shadow: 1px 1px 1px 1px var(--color-light);
+	word-break: break-all;
+	white-space: pre-wrap;
+	line-height: 1em;
+}
+
+@media screen and (max-width: 500px) {
+	ul,
+	ol {
+		padding-left: 1.5em;
+	}
+}
+
+@media screen and (min-width: 500px) {
+	pre {
+		margin: 2.5em;
+	}
+}
+
+code {
+	word-break: break-word;
+	font-size: 0.9em;
+}
+
+#chat img {
+	display: block;
+	margin: 1em;
+	max-width: 100%;
+}
+
+#chat li,
+#chat li p {
+	margin-top: 0.25em;
+	margin-bottom: 0.25em;
+}
+
+iframe {
+	max-width: 100%;
+}
+
+/* 
+	MESSAGES dans le chat
+*/
+
+.message {
+	margin: 1em 0;
+	width: 95%;
+}
+
+@media screen and (min-width: 500px) {
+	.message {
+		width: 85%;
+	}
+}
+
+/* -- Messages utilisateurs -- */
+
+.user-message {
+	padding: 0.5em 1em;
+	width: fit-content !important;
+	max-width: 550px;
+	align-self: flex-end;
+	border-radius: 10px;
+	background-color: var(--color-primary);
+	box-shadow:
+		rgba(0, 0, 0, 0.12) 0px 0.3px 0.9px,
+		rgba(0, 0, 0, 0.16) 0px 1.6px 3.6px;
+	color: #fff;
+}
+
+.user-message * {
+	display: inline;
+	font-size: 1em;
+	font-weight: normal;
+}
+
+/* -- Messages du bot -- */
+
+/* Avatar */
+
+.bot-message > :first-child::before {
+	content: "";
+	margin-right: 15px;
+	background-image: url("../favicon.svg");
+	background-size: var(--avatar-size);
+	width: var(--avatar-size);
+	height: var(--avatar-size);
+	display: inline-block;
+	vertical-align: bottom;
+}
+
+/* Boutons de choix d'options à cliquer en fin de message */
+
+.messageOptions {
+	margin-top: 1.5em;
+}
+
+.messageOptions li {
+	list-style-type: none;
+	margin-bottom: 0.5em;
+}
+
+.messageOptions a {
+	text-decoration: none;
+	background-color: var(--color-ultra-light);
+	padding: 5px 10px;
+	display: inline-block;
+	color: var(--color-text);
+	border-radius: 12px;
+	font-size: 0.95em;
+	margin-left: -20px;
+	border: 1px solid var(--color-light);
+	transition: all 0.2s ease;
+}
+
+.messageOptions a:hover {
+	background-color: var(--color-primary);
+	border-color: var(--color-primary);
+	color: #fff !important;
+}
+
+/* Bouton qui renvoie vers une URL externe */
+.messageOptions a[href^="#link:http"]:before {
+	content: "🔗";
+	margin-right: 0.5em;
+}
+
+/* Bouton et fenêtre modale pour accéder au menu de chaque message */
+
+.messageMenu {
+	text-align: right;
+	cursor: pointer;
+}
+
+#systemModal {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100vw;
+	height: 100vh;
+	background-color: rgba(0, 0, 0, 0.8);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 1000;
+}
+
+#systemModal .modal-content {
+	background: var(--color-bg);
+	padding: 20px;
+	border-radius: 8px;
+	position: relative;
+	max-width: 450px;
+	max-height: 90vh;
+	overflow: auto;
+}
+
+#systemModal .close-button {
+	position: absolute;
+	top: 10px;
+	right: 15px;
+	font-size: 24px;
+	cursor: pointer;
+}
+
+/* ÉLÉMENTS SPÉCIAUX */
+
+/* Bouton pour copier le contenu d'un bloc de code */
+
+button.copyCode {
+	position: absolute;
+	top: 5px;
+	right: 5px;
+	padding: 5px 10px;
+	font-size: 12px;
+	cursor: pointer;
+	border: none;
+	border-radius: 3px;
+	background-color: var(--color-primary);
+	color: #fff;
+}
+
+/* Admonitions */
+
+.admonition {
+	--info-icon: "📝";
+	--info-color-border: #0063cb;
+	--info-color-bg: rgb(1 125 255 / 7%);
+	--info-color-title: #004996;
+	--success-icon: "🌱";
+	--success-color-border: #18753c;
+	--success-color-bg: rgb(0 200 83 / 5%);
+	--success-color-title: #115525;
+	--warning-icon: "❗";
+	--warning-color-border: #d93025;
+	--warning-color-bg: rgb(255 0 0 / 5%);
+	--warning-color-title: #992222;
+	margin: 1.5em 0em;
+	padding: 0.75em 1em;
+	border: 1px solid var(--color-light);
+	border-left-width: 3px;
+	border-radius: 0.25em;
+	box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+	background-color: var(--color-ultra-light);
+	font-size: 0.9em;
+}
+
+@media screen and (min-width: 500px) {
+	.admonition {
+		margin-left: 1em;
+		font-size: 0.95em;
+	}
+}
+
+.admonitionTitle {
+	font-weight: bold;
+	letter-spacing: 0.02em;
+}
+
+.admonitionTitle:before {
+	font-weight: 300;
+	margin-right: 0.75em;
+	font-size: 1.15em;
+}
+
+.admonitionTitle:empty {
+	display: none;
+}
+
+.info .admonitionTitle:before,
+.note .admonitionTitle:before,
+.spoiler .admonitionTitle:before {
+	content: var(--info-icon);
+}
+.warning .admonitionTitle:before,
+.danger .admonitionTitle:before,
+.bug .admonitionTitle:before {
+	content: var(--warning-icon);
+}
+
+.tip .admonitionTitle:before,
+.success .admonitionTitle:before {
+	content: var(--success-icon);
+}
+
+.admonition.info,
+.admonition.note,
+.admonition.spoiler {
+	border-color: var(--info-color-border);
+	background: var(--info-color-bg);
+}
+
+.admonition.info .admonitionTitle,
+.admonition.note .admonitionTitle,
+.admonition.spoiler .admonitionTitle {
+	color: var(--info-color-title);
+}
+
+.admonition.success,
+.admonition.tip {
+	border-color: var(--success-color-border);
+	background: var(--success-color-bg);
+}
+
+.admonition.success .admonitionTitle,
+.admonition.tip .admonitionTitle {
+	color: var(--success-color-title);
+}
+
+.admonition.bug,
+.admonition.danger,
+.admonition.warning {
+	border-color: var(--warning-color-border);
+	background: var(--warning-color-bg);
+}
+
+.admonition.bug .admonitionTitle,
+.admonition.danger .admonitionTitle,
+.admonition.warning .admonitionTitle {
+	color: var(--warning-color-title);
+}
+
+.admonitionContent img {
+	max-width: 95% !important;
+}
+
+/* 
+ÉTATS DE L'APPLICATION
+*/
+
+/* Quand le clavier est masqué */
+
+.hideControls main {
+	min-height: 90vh;
+}
+
+.hideControls #chat {
+	margin-bottom: 2em;
+}
+
+.hideControls #controls {
+	height: 45px;
+	padding-top: 0px;
+	align-items: center;
+	justify-content: flex-end;
+}
+
+.hideControls #send-button {
+	margin-right: 20px;
+}
+
+.hideControls #controls #input-container {
+	display: none;
+}
+
+@media screen and (max-width: 500px) {
+	.hideControls #controls {
+		align-items: flex-start;
+		justify-content: center;
+	}
+	.hideControls footer {
+		bottom: 12px;
+	}
+}
+
+/* Quand le footer est masqué */
+.hideFooter footer {
+	display: none;
+}
+
+.hideFooter main {
+	min-height: 90vh;
+}
+
+.hideFooter #controls {
+	height: 70px;
+	padding-bottom: 10px;
+}
+
+@media screen and (min-width: 500px) {
+	.hideFooter #controls {
+		align-items: center;
+		padding-top: 0;
+	}
+}
+
+/* Quand un élément est caché */
+
+.hidden {
+	color: transparent;
+	font-size: 0;
+}
+
+.bot-message .hidden {
+	display: none;
+}
+
+/* Quand l'avatar est juste avant un élément spécial */
+
+.message > section:first-child > *:first-child,
+.message > .admonition:first-child,
+.message > table:first-child,
+.message > pre:first-child {
+	margin-left: calc(var(--avatar-size) + 20px) !important;
+}
+.message > .admonition:first-child:before,
+.message > table:first-child:before,
+.message > pre:first-child:before {
+	margin-left: calc(-1 * (var(--avatar-size) + 30px)) !important;
+	position: absolute !important;
+	margin-top: -20px !important;
+}
+.message > section:first-child:before {
+	position: absolute !important;
+	margin-top: -15px !important;
+}
