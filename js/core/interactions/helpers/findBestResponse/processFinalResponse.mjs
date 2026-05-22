@@ -1,0 +1,84 @@
+import { yaml } from "../../../../markdown/custom/yaml.mjs";
+import { processMessageWithChoiceOptions } from "../choiceOptions.mjs";
+import { getDefaultMessage } from "../getDefaultMessage.mjs";
+import { processQuestionToLLM } from "../processQuestionToLLM.mjs";
+
+const BESTMATCH_THRESHOLD = 0.545; // Seuil pour que le bestMatch soit pertinent
+
+export function processFinalResponse(
+	chatbot,
+	userInput,
+	bestMatch,
+	bestMatchScore,
+	indexBestMatch,
+) {
+	let chatbotResponses = chatbot.responses;
+	// Soit il y a un bestMatch, soit on veut aller directement à un prochain message mais seulement si la réponse inclut les keywords correspondant (sinon on remet le message initial)
+	if (bestMatch || chatbot.nextMessage.needsProcessing) {
+		if (
+			bestMatch &&
+			chatbot.nextMessage.needsProcessing &&
+			bestMatchScore > BESTMATCH_THRESHOLD
+		) {
+			// Réinitialiser si on a trouvé la bonne réponse après une directive !Next
+			chatbot.nextMessage.lastMessageFromBot = "";
+			chatbot.nextMessage.goto = "";
+			chatbot.nextMessage.errorsCounter = 0;
+			chatbot.nextMessage.needsProcessing = false;
+		}
+		// On envoie le meilleur choix s'il en existe un
+		let selectedResponseWithoutChoiceOptions = bestMatch
+			? Array.isArray(bestMatch)
+				? bestMatch.join("\n\n")
+				: bestMatch
+			: "";
+		let selectedResponseChoiceOptions = bestMatch
+			? chatbotResponses[indexBestMatch].choiceOptions
+			: [];
+		// Cas où on veut aller directement à un prochain message avec la directive !Next
+		// S'il y avait des keywords dans le message à afficher, on vérifie si la réponse de l'utilisateur inclut les keywords correspondant (sinon on remet le message initial)
+		let selectedResponseWithChoiceOptions;
+		if (
+			chatbot.nextMessage.needsProcessing &&
+			bestMatchScore < BESTMATCH_THRESHOLD
+		) {
+			// En cas de mauvaise réponse
+			selectedResponseWithChoiceOptions =
+				chatbot.nextMessage.lastMessageFromBot.includes(
+					chatbot.nextMessage.messageIfKeywordsNotFound,
+				)
+					? chatbot.nextMessage.lastMessageFromBot
+					: chatbot.nextMessage.messageIfKeywordsNotFound +
+						chatbot.nextMessage.lastMessageFromBot;
+		} else {
+			// En cas de bonne réponse
+			selectedResponseWithChoiceOptions = processMessageWithChoiceOptions(
+				chatbot,
+				selectedResponseWithoutChoiceOptions,
+				selectedResponseChoiceOptions,
+			);
+		}
+		// Si on a dans le yaml useLLM avec le paramètre `always: true`, on utilise un LLM pour répondre à la question en prenant en compte les réponses possibles comme contexte
+		if (yaml.useLLM.always) {
+			const answerFromLLM = processQuestionToLLM(chatbot, userInput, {
+				useLLM: true,
+				RAG: selectedResponseWithoutChoiceOptions,
+			});
+			if (answerFromLLM) return null;
+		} else {
+			return selectedResponseWithChoiceOptions;
+		}
+	} else {
+		// Si on n'a pas de bestMatch, on utilise un LLM pour répondre à la question si le yaml le permet
+		if (yaml.useLLM.always) {
+			const answerFromLLM = processQuestionToLLM(chatbot, userInput, {
+				useLLM: true,
+			});
+			if (answerFromLLM) return null;
+		} else {
+			// Sinon, en cas de correspondance non trouvée, on envoie un message par défaut (sélectionné au hasard dans la liste définie par defaultMessage)
+			// On fait en sorte que le message par défaut envoyé ne soit pas le même que les derniers messages par défaut envoyés
+			return getDefaultMessage(chatbot, userInput);
+		}
+	}
+}
