@@ -1,5 +1,6 @@
 ---
 gestionGrosMots: true
+clavier: false 
 ---
 
 # ChatMD
